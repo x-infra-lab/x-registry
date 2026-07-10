@@ -49,6 +49,10 @@ buildNumber.properties
 *.swo
 *~
 
+# Data
+data/
+**/data/
+
 # OS
 .DS_Store
 Thumbs.db
