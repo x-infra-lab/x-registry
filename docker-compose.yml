@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  node1:
+    build: .
+    container_name: x-registry-node1
+    hostname: node1
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx512m
+    command: >
+      java -jar app.jar
+      --x-registry.cluster.enabled=true
+      --x-registry.cluster.bind-address=node1
+      --x-registry.cluster.gossip-port=7848
+      --x-registry.cluster.distro-port=7849
+      --x-registry.cluster.raft-port=7850
+      --x-registry.cluster.seed-nodes=node2:7848,node3:7848
+      --x-registry.cluster.raft-data-dir=/data/raft
+    volumes:
+      - node1-data:/data
+    networks:
+      - x-registry-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8848/v1/cluster/health"]
+      interval: 10s
+      timeout: 3s
+      start_period: 30s
+      retries: 3
+
+  node2:
+    build: .
+    container_name: x-registry-node2
+    hostname: node2
+    ports:
+      - "8849:8848"
+      - "9849:9848"
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx512m
+    command: >
+      java -jar app.jar
+      --x-registry.cluster.enabled=true
+      --x-registry.cluster.bind-address=node2
+      --x-registry.cluster.gossip-port=7848
+      --x-registry.cluster.distro-port=7849
+      --x-registry.cluster.raft-port=7850
+      --x-registry.cluster.seed-nodes=node1:7848,node3:7848
+      --x-registry.cluster.raft-data-dir=/data/raft
+    volumes:
+      - node2-data:/data
+    networks:
+      - x-registry-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8848/v1/cluster/health"]
+      interval: 10s
+      timeout: 3s
+      start_period: 30s
+      retries: 3
+
+  node3:
+    build: .
+    container_name: x-registry-node3
+    hostname: node3
+    ports:
+      - "8850:8848"
+      - "9850:9848"
+    environment:
+      - JAVA_OPTS=-Xms256m -Xmx512m
+    command: >
+      java -jar app.jar
+      --x-registry.cluster.enabled=true
+      --x-registry.cluster.bind-address=node3
+      --x-registry.cluster.gossip-port=7848
+      --x-registry.cluster.distro-port=7849
+      --x-registry.cluster.raft-port=7850
+      --x-registry.cluster.seed-nodes=node1:7848,node2:7848
+      --x-registry.cluster.raft-data-dir=/data/raft
+    volumes:
+      - node3-data:/data
+    networks:
+      - x-registry-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8848/v1/cluster/health"]
+      interval: 10s
+      timeout: 3s
+      start_period: 30s
+      retries: 3
+
+volumes:
+  node1-data:
+  node2-data:
+  node3-data:
+
+networks:
+  x-registry-net:
+    driver: bridge

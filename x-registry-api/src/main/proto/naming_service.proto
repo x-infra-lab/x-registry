@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package xregistry;
+
+import "model.proto";
+
+option java_package = "com.x.registry.api.grpc";
+option java_multiple_files = true;
+option java_outer_classname = "NamingServiceProto";
+
+service NamingGrpcService {
+    rpc RegisterInstance(RegisterInstanceRequest) returns (RegisterInstanceResponse);
+    rpc DeregisterInstance(DeregisterInstanceRequest) returns (DeregisterInstanceResponse);
+    rpc QueryInstances(QueryInstancesRequest) returns (QueryInstancesResponse);
+    rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+    rpc BatchHeartbeat(BatchHeartbeatRequest) returns (BatchHeartbeatResponse);
+    rpc Subscribe(stream SubscribeRequest) returns (stream ServiceChangeEventProto);
+}
+
+message RegisterInstanceRequest {
+    string namespace = 1;
+    string service_name = 2;
+    string group = 3;
+    InstanceProto instance = 4;
+}
+
+message RegisterInstanceResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message DeregisterInstanceRequest {
+    string namespace = 1;
+    string service_name = 2;
+    string group = 3;
+    InstanceProto instance = 4;
+}
+
+message DeregisterInstanceResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message QueryInstancesRequest {
+    string namespace = 1;
+    string service_name = 2;
+    string group = 3;
+    string cluster_name = 4;
+    bool healthy_only = 5;
+}
+
+message QueryInstancesResponse {
+    string service_name = 1;
+    repeated InstanceProto instances = 2;
+    int64 last_modified = 3;
+}
+
+message HeartbeatRequest {
+    string namespace = 1;
+    string service_name = 2;
+    string group = 3;
+    string ip = 4;
+    int32 port = 5;
+    string cluster_name = 6;
+}
+
+message HeartbeatResponse {
+    bool success = 1;
+    int32 next_interval_ms = 2;
+}
+
+message BatchHeartbeatRequest {
+    repeated HeartbeatInstance instances = 1;
+}
+
+message HeartbeatInstance {
+    string namespace = 1;
+    string service_name = 2;
+    string group = 3;
+    string ip = 4;
+    int32 port = 5;
+    string cluster_name = 6;
+}
+
+message BatchHeartbeatResponse {
+    bool success = 1;
+    int32 success_count = 2;
+    int32 next_interval_ms = 3;
+}
+
+message SubscribeRequest {
+    string namespace = 1;
+    string service_name = 2;
+    string group = 3;
+}

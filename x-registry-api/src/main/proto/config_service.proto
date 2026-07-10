@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package xregistry;
+
+import "model.proto";
+
+option java_package = "com.x.registry.api.grpc";
+option java_multiple_files = true;
+option java_outer_classname = "ConfigServiceProto";
+
+service ConfigGrpcService {
+    rpc GetConfig(GetConfigRequest) returns (GetConfigResponse);
+    rpc PublishConfig(PublishConfigRequest) returns (PublishConfigResponse);
+    rpc DeleteConfig(DeleteConfigRequest) returns (DeleteConfigResponse);
+    rpc ListConfigHistory(ListConfigHistoryRequest) returns (ListConfigHistoryResponse);
+    rpc WatchConfig(stream WatchConfigRequest) returns (stream ConfigChangeEventProto);
+}
+
+message GetConfigRequest {
+    string namespace = 1;
+    string data_id = 2;
+    string group = 3;
+}
+
+message GetConfigResponse {
+    ConfigItemProto config = 1;
+    bool found = 2;
+}
+
+message PublishConfigRequest {
+    string namespace = 1;
+    string data_id = 2;
+    string group = 3;
+    string content = 4;
+    string content_type = 5;
+    string operator = 6;
+    string description = 7;
+}
+
+message PublishConfigResponse {
+    bool success = 1;
+    int64 version = 2;
+    string md5 = 3;
+    string message = 4;
+}
+
+message DeleteConfigRequest {
+    string namespace = 1;
+    string data_id = 2;
+    string group = 3;
+    string operator = 4;
+}
+
+message DeleteConfigResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message ListConfigHistoryRequest {
+    string namespace = 1;
+    string data_id = 2;
+    string group = 3;
+    int32 page = 4;
+    int32 page_size = 5;
+}
+
+message ListConfigHistoryResponse {
+    repeated ConfigItemProto revisions = 1;
+    int32 total = 2;
+}
+
+message WatchConfigRequest {
+    string namespace = 1;
+    string data_id = 2;
+    string group = 3;
+    string current_md5 = 4;
+}

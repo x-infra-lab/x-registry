@@ -1,0 +1,10 @@
+server:
+  port: 8848
+
+x-registry:
+  grpc:
+    port: 9848
+
+logging:
+  level:
+    com.x.registry: DEBUG

@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package xregistry;
+
+option java_package = "com.x.registry.api.grpc";
+option java_multiple_files = true;
+option java_outer_classname = "ModelProto";
+
+message InstanceProto {
+    string instance_id = 1;
+    string service_name = 2;
+    string cluster_name = 3;
+    string ip = 4;
+    int32 port = 5;
+    double weight = 6;
+    bool healthy = 7;
+    bool enabled = 8;
+    bool ephemeral = 9;
+    map<string, string> metadata = 10;
+    int64 last_heartbeat = 11;
+    int64 register_time = 12;
+}
+
+message ServiceProto {
+    string namespace = 1;
+    string group = 2;
+    string service_name = 3;
+    repeated ClusterProto clusters = 4;
+}
+
+message ClusterProto {
+    string name = 1;
+    repeated InstanceProto instances = 2;
+}
+
+message ConfigItemProto {
+    string data_id = 1;
+    string group = 2;
+    string namespace = 3;
+    string content = 4;
+    string content_type = 5;
+    string md5 = 6;
+    int64 version = 7;
+    int64 last_modified = 8;
+    string operator = 9;
+    string description = 10;
+}
+
+message ConfigChangeEventProto {
+    string data_id = 1;
+    string group = 2;
+    string namespace = 3;
+    string content = 4;
+    string md5 = 5;
+    int64 version = 6;
+    ChangeType change_type = 7;
+}
+
+message ServiceChangeEventProto {
+    string namespace = 1;
+    string service_name = 2;
+    repeated InstanceProto instances = 3;
+    ChangeType change_type = 4;
+}
+
+enum ChangeType {
+    ADDED = 0;
+    MODIFIED = 1;
+    DELETED = 2;
+}

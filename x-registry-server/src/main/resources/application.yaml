@@ -1,0 +1,54 @@
+server:
+  port: 8848
+  shutdown: graceful
+
+x-registry:
+  grpc:
+    port: 9848
+    tls:
+      enabled: false
+      cert-path: ""
+      key-path: ""
+      trust-cert-path: ""
+    rate-limit:
+      requests-per-second: 1000
+  session:
+    max-connections: 50000
+  health-check:
+    interval-ms: 5000
+    unhealthy-threshold-ms: 15000
+    remove-threshold-ms: 30000
+  cluster:
+    enabled: false
+    bind-address: 127.0.0.1
+    gossip-port: 7848
+    distro-port: 7849
+    raft-port: 7850
+    seed-nodes: []
+    raft-data-dir: ./data/raft
+  auth:
+    enabled: false
+  storage:
+    type: rocksdb
+    rocksdb:
+      path: ./data/rocksdb
+    max-instance-count: 100000
+
+spring:
+  application:
+    name: x-registry-server
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info
+  metrics:
+    tags:
+      application: x-registry-server
+
+logging:
+  level:
+    com.x.registry: INFO

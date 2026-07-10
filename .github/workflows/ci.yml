@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [17, 21]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+          cache: maven
+
+      - name: Build
+        run: mvn clean compile -q
+
+      - name: Run Unit Tests
+        run: mvn test -pl '!x-registry-tests'
+
+      - name: Package
+        run: mvn package -DskipTests -q
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+          cache: maven
+
+      - name: Build All Modules
+        run: mvn clean package -DskipTests -q
+
+      - name: Run E2E Cluster Tests
+        run: mvn test -pl x-registry-tests -Pe2e -Dtest.timeout=300
+        timeout-minutes: 10
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+          cache: maven
+
+      - name: Build JAR
+        run: mvn clean package -DskipTests -q
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: x-registry:${{ github.sha }},x-registry:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke Test - Docker Standalone
+        run: |
+          docker run -d --name x-registry-smoke -p 8848:8848 -p 9848:9848 x-registry:latest
+          sleep 15
+          curl -sf http://localhost:8848/v1/cluster/health | grep -q '"status":"UP"'
+          docker stop x-registry-smoke
+          docker rm x-registry-smoke
